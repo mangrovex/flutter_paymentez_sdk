@@ -1,25 +1,28 @@
 import 'dart:convert';
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:mocktail/mocktail.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_paymentez_sdk/models/models.dart';
 import 'package:flutter_paymentez_sdk/src/paymentez.impl.dart';
 import 'package:flutter_paymentez_sdk/utils/utils.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../helpers/helpers.dart';
 
-class MockHttpClient extends Mock implements http.Client {}
+class MockDioClient extends Mock implements Dio {}
 
 void main() {
-  late MockHttpClient mockHttpClient;
+  late MockDioClient mockDioClient;
   late PaymentezImpl paymentez;
 
-  setUp(() {
-    mockHttpClient = MockHttpClient();
+  setUpAll(() {
+    registerFallbackValue(Options());
+  });
 
+  setUp(() {
+    mockDioClient = MockDioClient();
     paymentez = PaymentezImpl(
-      client: mockHttpClient,
+      client: mockDioClient,
       serverApplicationCode: 'serverAppCode',
       serverAppKey: 'serverAppKey',
       clientApplicationCode: 'clientAppCode',
@@ -35,8 +38,9 @@ void main() {
           'get_cards_success.json',
         );
 
-        final mockURI =
-            Uri.parse('https://ccapi-stg.paymentez.com/v2/card/list?uid=4');
+        final mockURI = Uri.parse(
+          'https://ccapi-stg.paymentez.com/v2/card/list?uid=4',
+        );
 
         final headerMock = {
           'Auth-Token': PaymentezSecurity.getAuthToken(
@@ -46,12 +50,21 @@ void main() {
           'Content-Type': 'application/json',
         };
 
-        when(() => mockHttpClient.get(mockURI, headers: headerMock)).thenAnswer(
-          (_) async => http.Response(
-            jsonResp,
-            HttpStatus.ok,
+        when(
+          () => mockDioClient.get(
+            mockURI.toString(),
+            options: any(named: 'options'),
           ),
-        );
+        ).thenAnswer((invocation) async {
+          final options = invocation.namedArguments[#options] as Options?;
+          expect(options?.headers, headerMock);
+
+          return Response(
+            requestOptions: RequestOptions(path: mockURI.toString()),
+            data: json.decode(jsonResp) as Map<String, dynamic>,
+            statusCode: HttpStatus.ok,
+          );
+        });
 
         final (result, err) = await paymentez.getAllCards('4');
 
@@ -66,8 +79,9 @@ void main() {
           'get_cards_error.json',
         );
 
-        final mockURI =
-            Uri.parse('https://ccapi-stg.paymentez.com/v2/card/list?uid=4');
+        final mockURI = Uri.parse(
+          'https://ccapi-stg.paymentez.com/v2/card/list?uid=4',
+        );
 
         final headerMock = {
           'Auth-Token': PaymentezSecurity.getAuthToken(
@@ -77,12 +91,21 @@ void main() {
           'Content-Type': 'application/json',
         };
 
-        when(() => mockHttpClient.get(mockURI, headers: headerMock)).thenAnswer(
-          (_) async => http.Response(
-            jsonResp,
-            HttpStatus.unauthorized,
+        when(
+          () => mockDioClient.get(
+            mockURI.toString(),
+            options: any(named: 'options'),
           ),
-        );
+        ).thenAnswer((invocation) async {
+          final options = invocation.namedArguments[#options] as Options?;
+          expect(options?.headers, headerMock);
+
+          return Response(
+            requestOptions: RequestOptions(path: mockURI.toString()),
+            data: json.decode(jsonResp) as Map<String, dynamic>,
+            statusCode: HttpStatus.unauthorized,
+          );
+        });
 
         final (result, err) = await paymentez.getAllCards('4');
         expect(result, isNull);
@@ -122,17 +145,25 @@ void main() {
         };
 
         when(
-          () => mockHttpClient.post(
-            mockURI,
-            headers: headerMock,
-            body: json.encode(modelRequest.toJson()),
+          () => mockDioClient.post(
+            mockURI.toString(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
           ),
-        ).thenAnswer(
-          (_) async => http.Response(
-            jsonResp,
-            HttpStatus.ok,
-          ),
-        );
+        ).thenAnswer((invocation) async {
+          final options = invocation.namedArguments[#options] as Options?;
+          expect(options?.headers, headerMock);
+          expect(
+            invocation.namedArguments[#data],
+            json.encode(modelRequest.toJson()),
+          );
+
+          return Response(
+            requestOptions: RequestOptions(path: mockURI.toString()),
+            data: json.decode(jsonResp) as Map<String, dynamic>,
+            statusCode: HttpStatus.ok,
+          );
+        });
 
         final (result, err) = await paymentez.addCard(modelRequest);
 
@@ -169,17 +200,25 @@ void main() {
         };
 
         when(
-          () => mockHttpClient.post(
-            mockURI,
-            headers: headerMock,
-            body: json.encode(modelRequest.toJson()),
+          () => mockDioClient.post(
+            mockURI.toString(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
           ),
-        ).thenAnswer(
-          (_) async => http.Response(
-            jsonResp,
-            HttpStatus.forbidden,
-          ),
-        );
+        ).thenAnswer((invocation) async {
+          final options = invocation.namedArguments[#options] as Options?;
+          expect(options?.headers, headerMock);
+          expect(
+            invocation.namedArguments[#data],
+            json.encode(modelRequest.toJson()),
+          );
+
+          return Response(
+            requestOptions: RequestOptions(path: mockURI.toString()),
+            data: json.decode(jsonResp) as Map<String, dynamic>,
+            statusCode: HttpStatus.forbidden,
+          );
+        });
 
         final (result, err) = await paymentez.addCard(modelRequest);
 
@@ -213,17 +252,25 @@ void main() {
         };
 
         when(
-          () => mockHttpClient.post(
-            mockURI,
-            headers: headerMock,
-            body: json.encode(modelRequest.toJson()),
+          () => mockDioClient.post(
+            mockURI.toString(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
           ),
-        ).thenAnswer(
-          (_) async => http.Response(
-            jsonResp,
-            HttpStatus.ok,
-          ),
-        );
+        ).thenAnswer((invocation) async {
+          final options = invocation.namedArguments[#options] as Options?;
+          expect(options?.headers, headerMock);
+          expect(
+            invocation.namedArguments[#data],
+            json.encode(modelRequest.toJson()),
+          );
+
+          return Response(
+            requestOptions: RequestOptions(path: mockURI.toString()),
+            data: json.decode(jsonResp) as Map<String, dynamic>,
+            statusCode: HttpStatus.ok,
+          );
+        });
 
         final (result, err) = await paymentez.deleteCard(modelRequest);
 
@@ -254,17 +301,25 @@ void main() {
         };
 
         when(
-          () => mockHttpClient.post(
-            mockURI,
-            headers: headerMock,
-            body: json.encode(modelRequest.toJson()),
+          () => mockDioClient.post(
+            mockURI.toString(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
           ),
-        ).thenAnswer(
-          (_) async => http.Response(
-            jsonResp,
-            HttpStatus.internalServerError,
-          ),
-        );
+        ).thenAnswer((invocation) async {
+          final options = invocation.namedArguments[#options] as Options?;
+          expect(options?.headers, headerMock);
+          expect(
+            invocation.namedArguments[#data],
+            json.encode(modelRequest.toJson()),
+          );
+
+          return Response(
+            requestOptions: RequestOptions(path: mockURI.toString()),
+            data: json.decode(jsonResp) as Map<String, dynamic>,
+            statusCode: HttpStatus.internalServerError,
+          );
+        });
 
         final (result, err) = await paymentez.deleteCard(modelRequest);
 

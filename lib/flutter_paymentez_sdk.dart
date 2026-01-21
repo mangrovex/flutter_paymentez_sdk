@@ -1,4 +1,4 @@
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:flutter_paymentez_sdk/models/models.dart';
 import 'package:flutter_paymentez_sdk/src/paymentez.impl.dart';
 import 'package:flutter_paymentez_sdk/src/paymentez.interface.dart';
@@ -14,14 +14,14 @@ class FlutterPaymentezSDK implements IPaymentez {
     bool isProd = false,
     bool isPCI = false,
   }) : _svc = PaymentezImpl(
-          client: http.Client(),
-          serverApplicationCode: serverApplicationCode,
-          serverAppKey: serverAppKey,
-          clientAppKey: clientAppKey,
-          clientApplicationCode: clientApplicationCode,
-          isProd: isProd,
-          isPCI: isPCI,
-        );
+    client: Dio(),
+    serverApplicationCode: serverApplicationCode,
+    serverAppKey: serverAppKey,
+    clientAppKey: clientAppKey,
+    clientApplicationCode: clientApplicationCode,
+    isProd: isProd,
+    isPCI: isPCI,
+  );
 
   final PaymentezImpl _svc;
 
@@ -35,8 +35,7 @@ class FlutterPaymentezSDK implements IPaymentez {
 
   @override
   Future<(DeleteCardResponse?, PaymentezError?)> deleteCard(
-    DeleteCardRequest deleteCardRequest,
-  ) =>
+      DeleteCardRequest deleteCardRequest,) =>
       _svc.deleteCard(deleteCardRequest);
 
   @override
@@ -45,13 +44,11 @@ class FlutterPaymentezSDK implements IPaymentez {
 
   @override
   Future<(PayResponse?, PaymentezError?)> debitCC(
-    PayPCIRequest payPCIRequest,
-  ) =>
+      PayPCIRequest payPCIRequest,) =>
       _svc.debitCC(payPCIRequest);
 
   @override
   Future<(RefundResponse?, PaymentezError?)> refund(
-    RefundRequest refundRequest,
-  ) =>
+      RefundRequest refundRequest,) =>
       _svc.refund(refundRequest);
 }

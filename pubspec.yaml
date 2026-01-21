@@ -1,9 +1,9 @@
 name: flutter_paymentez_sdk
 description: "Manexware Paymentez SDK"
-version: 0.1.1
+version: 0.0.1
 homepage: 'https://www.manexware.com'
-repository: 'https://github.com/mangrovex/banner_carousel_odoo'
-issue_tracker: 'https://github.com/mangrovex/banner_carousel_odoo/issues'
+repository: 'https://github.com/mangrovex/flutter_paymentez_sdk'
+issue_tracker: 'https://github.com/mangrovex/flutter_paymentez_sdk/issues'
 
 environment:
   sdk: '>=3.4.1 <4.0.0'
@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   crypto: ^3.0.3
-  http: ^1.2.1
+  dio: ^5.4.3
 
 dev_dependencies:
   flutter_test:

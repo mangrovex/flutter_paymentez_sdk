@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:flutter_paymentez_sdk/models/models.dart';
 import 'package:flutter_paymentez_sdk/src/paymentez.interface.dart';
 import 'package:flutter_paymentez_sdk/utils/utils.dart';
@@ -23,10 +23,21 @@ class PaymentezImpl implements IPaymentez {
   final bool isProd;
   final bool isPCI;
 
-  final http.Client client;
+  final Dio client;
 
   String get _host =>
-      isProd ? 'ccapi.paymentez.com ' : 'ccapi-stg.paymentez.com';
+      isProd ? 'ccapi.paymentez.com' : 'ccapi-stg.paymentez.com';
+
+  Map<String, dynamic> _decodeBody(Response<dynamic> response) {
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+    if (data is String && data.isNotEmpty) {
+      return json.decode(data) as Map<String, dynamic>;
+    }
+    return <String, dynamic>{};
+  }
 
   Map<String, String> _headers({bool isServer = false}) {
     var appCode = isPCI ? serverApplicationCode : clientApplicationCode;
@@ -50,11 +61,11 @@ class PaymentezImpl implements IPaymentez {
   ) async {
     final url = Uri.https(_host, '/v2/card/list', {'uid': userID});
     final response = await client.get(
-      url,
-      headers: _headers(isServer: true),
+      url.toString(),
+      options: Options(headers: _headers(isServer: true)),
     );
 
-    final body = json.decode(response.body) as Map<String, dynamic>;
+    final body = _decodeBody(response);
 
     if (response.statusCode == HttpStatus.ok) {
       final result = CardsResponse.fromJson(body);
@@ -70,12 +81,12 @@ class PaymentezImpl implements IPaymentez {
   ) async {
     final url = Uri.https(_host, '/v2/card/add');
     final response = await client.post(
-      url,
-      headers: _headers(),
-      body: json.encode(newCard.toJson()),
+      url.toString(),
+      data: json.encode(newCard.toJson()),
+      options: Options(headers: _headers()),
     );
 
-    final body = json.decode(response.body) as Map<String, dynamic>;
+    final body = _decodeBody(response);
 
     if (response.statusCode == HttpStatus.ok) {
       final result = AddCardResponse.fromJson(body);
@@ -92,12 +103,12 @@ class PaymentezImpl implements IPaymentez {
     final url = Uri.https(_host, '/v2/card/delete');
 
     final response = await client.post(
-      url,
-      headers: _headers(isServer: true),
-      body: json.encode(deleteCardRequest.toJson()),
+      url.toString(),
+      data: json.encode(deleteCardRequest.toJson()),
+      options: Options(headers: _headers(isServer: true)),
     );
 
-    final body = json.decode(response.body) as Map<String, dynamic>;
+    final body = _decodeBody(response);
     if (response.statusCode == HttpStatus.ok) {
       final result = DeleteCardResponse.fromJson(body);
       return (result, null);
@@ -111,12 +122,12 @@ class PaymentezImpl implements IPaymentez {
     final url = Uri.https(_host, '/v2/transaction/debit');
 
     final response = await client.post(
-      url,
-      headers: _headers(isServer: true),
-      body: json.encode(payRequest.toJson()),
+      url.toString(),
+      data: json.encode(payRequest.toJson()),
+      options: Options(headers: _headers(isServer: true)),
     );
 
-    final body = json.decode(response.body) as Map<String, dynamic>;
+    final body = _decodeBody(response);
     if (response.statusCode == HttpStatus.ok) {
       final result = PayResponse.fromJson(body);
       return (result, null);
@@ -132,12 +143,12 @@ class PaymentezImpl implements IPaymentez {
     final url = Uri.https(_host, '/v2/transaction/debit_cc');
 
     final response = await client.post(
-      url,
-      headers: _headers(),
-      body: json.encode(payPCIRequest.toJson()),
+      url.toString(),
+      data: json.encode(payPCIRequest.toJson()),
+      options: Options(headers: _headers()),
     );
 
-    final body = json.decode(response.body) as Map<String, dynamic>;
+    final body = _decodeBody(response);
     if (response.statusCode == HttpStatus.ok) {
       final result = PayResponse.fromJson(body);
       return (result, null);
@@ -153,12 +164,12 @@ class PaymentezImpl implements IPaymentez {
     final url = Uri.https(_host, '/v2/transaction/refund');
 
     final response = await client.post(
-      url,
-      headers: _headers(),
-      body: json.encode(payPCIRequest.toJson()),
+      url.toString(),
+      data: json.encode(payPCIRequest.toJson()),
+      options: Options(headers: _headers()),
     );
 
-    final body = json.decode(response.body) as Map<String, dynamic>;
+    final body = _decodeBody(response);
     if (response.statusCode == HttpStatus.ok) {
       final result = RefundResponse.fromJson(body);
       return (result, null);
